@@ -115,7 +115,6 @@
             this.getById.TabIndex = 4;
             this.getById.Text = "Get by ID";
             this.getById.UseVisualStyleBackColor = false;
-            this.getById.Click += new System.EventHandler(this.getById_Click);
             // 
             // groupBox2
             // 

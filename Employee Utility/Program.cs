@@ -1,3 +1,5 @@
+using utility;
+
 namespace Employee_Utility
 {
     internal static class Program
@@ -11,7 +13,7 @@ namespace Employee_Utility
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
             //ApplicationConfiguration.Initialize();
-            Application.Run(new Form1());
+            Application.Run(new DataViewForm());
         }
     }
 }

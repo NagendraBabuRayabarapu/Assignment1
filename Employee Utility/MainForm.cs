@@ -44,12 +44,6 @@ namespace Employee_Utility
 
         }
 
-        private void getById_Click(object sender, EventArgs e)
-        {
-            DataViewForm form2 = new DataViewForm(Convert.ToInt32(textBoxID.Text));
-            form2.Show();
-        }
-
         private async void update_Click(object sender, EventArgs e)
         {
             Employee emp = new Employee
