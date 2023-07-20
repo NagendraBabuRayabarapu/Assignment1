@@ -14,35 +14,21 @@ namespace WebApi.Controllers
     [ApiController]
     public class EmployeesController : ControllerBase
     {
+        private readonly EmployeeService _employeeService;
+
+        private readonly string _connectionString;
+
+        public EmployeesController(IConfiguration configuration)
+        {
+            _connectionString = configuration.GetConnectionString("EmployeeDBConnection");
+            _employeeService = new EmployeeService(_connectionString);
+
+        }
+
         [HttpGet]
         public IActionResult Gets()
         {
-            List<Employee> employees = new List<Employee>();
-            string connectionString = "Server = NagendraPC; Database = EmployeeDB; Trusted_Connection = True; Encrypt=False";
-
-
-            using (SqlConnection connection = new SqlConnection(connectionString))
-            {
-                string query = "SELECT * FROM Employees";
-                SqlCommand command = new SqlCommand(query, connection);
-                connection.Open();
-
-                SqlDataReader reader = command.ExecuteReader();
-
-                while (reader.Read())
-                {
-                    Employee employee = new Employee();
-                    employee.ID = (int)reader["ID"];
-                    employee.FirstName = (string)reader["FirstName"];
-                    employee.LastName = (string)reader["LastName"];
-                    employee.Gender = (string)reader["Gender"];
-                    employee.Salary = (int)reader["Salary"];
-
-                    employees.Add(employee);
-                }
-
-                reader.Close();
-            }
+            List<Employee> employees = _employeeService.GetAllEmployees();
 
             if (employees.Count == 0)
             {
@@ -52,112 +38,50 @@ namespace WebApi.Controllers
             return Ok(employees);
         }
 
-
         [HttpGet("GetEmployee")]
         public IActionResult GetEmployee(int id)
         {
-            List<Employee> employees = new List<Employee>();
-            string connectionString = "Server = NagendraPC; Database = EmployeeDB; Trusted_Connection = True; Encrypt=False";
+            Employee employee = _employeeService.GetEmployeeById(id);
 
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            if (employee == null)
             {
-                SqlCommand command = new SqlCommand("SELECT * FROM Employees WHERE ID = @ID", connection);
-                command.Parameters.AddWithValue("@ID", id);
-                connection.Open();
-
-                SqlDataReader reader = command.ExecuteReader();
-
-                if (reader.Read())
-                {
-                    Employee employee = new Employee();
-                    employee.ID = (int)reader["ID"];
-                    employee.FirstName = (string)reader["FirstName"];
-                    employee.LastName = (string)reader["LastName"];
-                    employee.Gender = (string)reader["Gender"];
-                    employee.Salary = (int)reader["Salary"];
-                    employees.Add(employee);
-                }
-
-                reader.Close();
+                return NotFound();
             }
 
-            return Ok(employees);
+            return Ok(employee);
         }
 
         [HttpPost("Add")]
         public IActionResult AddEmployee([FromBody] Employee employee)
         {
-            string connectionString = "Server = NagendraPC; Database = EmployeeDB; Trusted_Connection = True; Encrypt=False";//from cofig file
-
-            using (SqlConnection connection = new SqlConnection(connectionString))
-            {
-                SqlCommand command = new SqlCommand("sp_CreateEmp", connection);
-                command.CommandType = CommandType.StoredProcedure;
-
-                command.Parameters.AddWithValue("@FirstName", employee.FirstName);
-                command.Parameters.AddWithValue("@LastName", employee.LastName);
-                command.Parameters.AddWithValue("@Gender", employee.Gender);
-                command.Parameters.AddWithValue("@Salary", employee.Salary);
-
-                connection.Open();
-                command.ExecuteNonQuery();
-            }
-
+            _employeeService.AddEmployee(employee);
             return Ok("SUCCESS");
         }
 
         [HttpPut("Update")]
         public IActionResult UpdateEmployee(int id, [FromBody] Employee updatedEmployee)
         {
-            string connectionString = "Server = NagendraPC; Database = EmployeeDB; Trusted_Connection = True; Encrypt=False";
-            int rowsAffected = 0;
+            bool success = _employeeService.UpdateEmployee(id, updatedEmployee);
 
-            using (SqlConnection connection = new SqlConnection(connectionString))
-            {
-                SqlCommand command = new SqlCommand("sp_UpdateEmp", connection);
-                command.CommandType = CommandType.StoredProcedure;
-
-                command.Parameters.AddWithValue("@ID", id);
-                command.Parameters.AddWithValue("@FirstName", updatedEmployee.FirstName);
-                command.Parameters.AddWithValue("@LastName", updatedEmployee.LastName);
-                command.Parameters.AddWithValue("@Gender", updatedEmployee.Gender);
-                command.Parameters.AddWithValue("@Salary", updatedEmployee.Salary);
-
-                connection.Open();
-                rowsAffected = command.ExecuteNonQuery();
-            }
-
-            if (rowsAffected == 0)
+            if (!success)
             {
                 return NotFound("Record not exists or not modified");
             }
 
-            return Ok($"SUCCESS {rowsAffected} rows modified");
+            return Ok($"SUCCESS 1 row modified");
         }
-
 
         [HttpDelete("Delete")]
         public IActionResult DeleteEmployee(int id)
         {
-            string connectionString = "Server = NagendraPC; Database = EmployeeDB; Trusted_Connection = True; Encrypt=False";
-            int rowsAffected = 0;
+            bool success = _employeeService.DeleteEmployee(id);
 
-            using (SqlConnection connection = new SqlConnection(connectionString))
-            {
-                SqlCommand command = new SqlCommand("DELETE FROM Employees WHERE ID = @ID", connection);
-                command.Parameters.AddWithValue("@ID", id);
-
-                connection.Open();
-                rowsAffected = command.ExecuteNonQuery();
-            }
-
-            if (rowsAffected == 0)
+            if (!success)
             {
                 return NotFound("Record not exists or not deleted");
             }
-            return Ok($"SUCCESS {rowsAffected} rows deleted");
 
+            return Ok($"SUCCESS 1 row deleted");
         }
-
     }
 }
