@@ -41,7 +41,7 @@ namespace WebApi.Controllers
         [HttpGet("GetEmployee")]
         public IActionResult GetEmployee(int id)
         {
-            Employee employee = _employeeService.GetEmployeeById(id);
+            List<Employee> employee = _employeeService.GetEmployeeById(id);
 
             if (employee == null)
             {

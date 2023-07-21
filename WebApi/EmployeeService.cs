@@ -16,7 +16,7 @@ namespace WebApi
             return _employeeDAL.GetAllEmployees();
         }
 
-        public Employee GetEmployeeById(int id)
+        public List<Employee> GetEmployeeById(int id)
         {
             return _employeeDAL.GetEmployeeById(id);
         }

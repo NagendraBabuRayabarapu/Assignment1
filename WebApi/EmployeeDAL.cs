@@ -1,4 +1,6 @@
 ﻿using Microsoft.Data.SqlClient;
+using System;
+using System.Collections.Generic;
 using System.Data;
 using WebApi.Models;
 
@@ -15,109 +17,95 @@ namespace WebApi
 
         public List<Employee> GetAllEmployees()
         {
-            List<Employee> employees = new List<Employee>();
-
-            using (SqlConnection connection = new SqlConnection(_connectionString))
-            {
-                string query = "SELECT * FROM Employees";
-                SqlCommand command = new SqlCommand(query, connection);
-                connection.Open();
-
-                SqlDataReader reader = command.ExecuteReader();
-
-                while (reader.Read())
-                {
-                    Employee employee = new Employee();
-                    employee.ID = (int)reader["ID"];
-                    employee.FirstName = (string)reader["FirstName"];
-                    employee.LastName = (string)reader["LastName"];
-                    employee.Gender = (string)reader["Gender"];
-                    employee.Salary = (int)reader["Salary"];
-
-                    employees.Add(employee);
-                }
-
-                reader.Close();
-            }
-
-            return employees;
+            string query = "SELECT * FROM Employees";
+            return ExecuteQuery<Employee>(query, CommandType.Text, null, MapEmployee);
         }
 
-        public Employee GetEmployeeById(int id)
+        public List<Employee> GetEmployeeById(int id)
         {
-            using (SqlConnection connection = new SqlConnection(_connectionString))
-            {
-                SqlCommand command = new SqlCommand("SELECT * FROM Employees WHERE ID = @ID", connection);
-                command.Parameters.AddWithValue("@ID", id);
-                connection.Open();
-
-                SqlDataReader reader = command.ExecuteReader();
-
-                if (reader.Read())
-                {
-                    Employee employee = new Employee();
-                    employee.ID = (int)reader["ID"];
-                    employee.FirstName = (string)reader["FirstName"];
-                    employee.LastName = (string)reader["LastName"];
-                    employee.Gender = (string)reader["Gender"];
-                    employee.Salary = (int)reader["Salary"];
-
-                    return employee;
-                }
-
-                reader.Close();
-            }
-
-            return null;
+            string query = "SELECT * FROM Employees WHERE ID = @ID";
+            var parameters = new List<SqlParameter> { new SqlParameter("@ID", id) };
+            return ExecuteQuery<Employee>(query, CommandType.Text, parameters, MapEmployee);
         }
 
         public void AddEmployee(Employee employee)
         {
-            using (SqlConnection connection = new SqlConnection(_connectionString))
+            string spName = "sp_CreateEmp";
+            var parameters = new List<SqlParameter>
             {
-                SqlCommand command = new SqlCommand("sp_CreateEmp", connection);
-                command.CommandType = CommandType.StoredProcedure;
+                new SqlParameter("@FirstName", employee.FirstName),
+                new SqlParameter("@LastName", employee.LastName),
+                new SqlParameter("@Gender", employee.Gender),
+                new SqlParameter("@Salary", employee.Salary)
+            };
 
-                command.Parameters.AddWithValue("@FirstName", employee.FirstName);
-                command.Parameters.AddWithValue("@LastName", employee.LastName);
-                command.Parameters.AddWithValue("@Gender", employee.Gender);
-                command.Parameters.AddWithValue("@Salary", employee.Salary);
-
-                connection.Open();
-                command.ExecuteNonQuery();
-            }
+            ExecuteNonQuery(spName, CommandType.StoredProcedure, parameters);
         }
 
         public int UpdateEmployee(int id, Employee updatedEmployee)
         {
-            int rowsAffected = 0;
-
-            using (SqlConnection connection = new SqlConnection(_connectionString))
+            string spName = "sp_UpdateEmp";
+            var parameters = new List<SqlParameter>
             {
-                SqlCommand command = new SqlCommand("sp_UpdateEmp", connection);
-                command.CommandType = CommandType.StoredProcedure;
+                new SqlParameter("@ID", id),
+                new SqlParameter("@FirstName", updatedEmployee.FirstName),
+                new SqlParameter("@LastName", updatedEmployee.LastName),
+                new SqlParameter("@Gender", updatedEmployee.Gender),
+                new SqlParameter("@Salary", updatedEmployee.Salary)
+            };
 
-                command.Parameters.AddWithValue("@ID", id);
-                command.Parameters.AddWithValue("@FirstName", updatedEmployee.FirstName);
-                command.Parameters.AddWithValue("@LastName", updatedEmployee.LastName);
-                command.Parameters.AddWithValue("@Gender", updatedEmployee.Gender);
-                command.Parameters.AddWithValue("@Salary", updatedEmployee.Salary);
-
-                connection.Open();
-                rowsAffected = command.ExecuteNonQuery();
-            }
-
-            return rowsAffected;
+            return ExecuteNonQuery(spName, CommandType.StoredProcedure, parameters);
         }
 
         public int DeleteEmployee(int id)
+        {
+            string query = "DELETE FROM Employees WHERE ID = @ID";
+            var parameters = new List<SqlParameter> { new SqlParameter("@ID", id) };
+            return ExecuteNonQuery(query, CommandType.Text, parameters);
+        }
+
+        private List<T> ExecuteQuery<T>(string query, CommandType commandType, List<SqlParameter> parameters, Func<SqlDataReader, T> mapper)
+        {
+            List<T> result = new List<T>();
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                SqlCommand command = new SqlCommand(query, connection);
+                command.CommandType = commandType;
+
+                if (parameters != null && parameters.Count > 0)
+                {
+                    command.Parameters.AddRange(parameters.ToArray());
+                }
+
+                connection.Open();
+
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        T item = mapper(reader);
+                        result.Add(item);
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        private int ExecuteNonQuery(string query, CommandType commandType, List<SqlParameter> parameters)
         {
             int rowsAffected = 0;
 
             using (SqlConnection connection = new SqlConnection(_connectionString))
             {
-                SqlCommand command = new SqlCommand("DELETE FROM Employees WHERE ID = @ID", connection);
-                command.Parameters.AddWithValue("@ID", id);
+                SqlCommand command = new SqlCommand(query, connection);
+                command.CommandType = commandType;
+
+                if (parameters != null && parameters.Count > 0)
+                {
+                    command.Parameters.AddRange(parameters.ToArray());
+                }
 
                 connection.Open();
                 rowsAffected = command.ExecuteNonQuery();
@@ -125,7 +113,17 @@ namespace WebApi
 
             return rowsAffected;
         }
+
+        private Employee MapEmployee(SqlDataReader reader)
+        {
+            return new Employee
+            {
+                ID = (int)reader["ID"],
+                FirstName = (string)reader["FirstName"],
+                LastName = (string)reader["LastName"],
+                Gender = (string)reader["Gender"],
+                Salary = (int)reader["Salary"]
+            };
+        }
     }
-
-
 }
