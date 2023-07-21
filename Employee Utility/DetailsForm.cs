@@ -26,6 +26,30 @@ namespace utility
             InitializeComponent();
             this.Id = id;
             this.buttonSubmit.Text = "Update";
+            GetEmployeeData(id);
+        }
+
+        private async void GetEmployeeData(int id)
+        {
+            string getEmployeeURL = ConfigurationManager.AppSettings["GetEmp"];
+
+
+            string jsonResponse = await Processor.MakeHttpCall(HttpMethod.Get, getEmployeeURL + Id.ToString(), null);
+
+
+            if (string.IsNullOrEmpty(jsonResponse))
+            {
+                MessageBox.Show("Employee is not present", "INFO", MessageBoxButtons.OK);
+            }
+            else
+            {
+                List<Employee> employees = JsonConvert.DeserializeObject<List<Employee>>(jsonResponse);
+                this.textBoxFirstName.Text = employees[0].FirstName;
+                this.textBoxLastName.Text = employees[0].LastName;
+                this.textBoxSalary.Text = employees[0].Salary.ToString();
+                this.comboBoxGender.SelectedItem = employees[0].Gender.ToString();
+
+            }
         }
 
         private void buttonClear_Click(object sender, EventArgs e)

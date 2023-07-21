@@ -74,7 +74,7 @@
             this.textBoxSearch.PlaceholderText = "Enter ID or Name";
             this.textBoxSearch.Size = new System.Drawing.Size(233, 27);
             this.textBoxSearch.TabIndex = 2;
-            this.textBoxSearch.TextChanged += new System.EventHandler(this.textBoxSearch_TextChanged);
+            this.textBoxSearch.TextChanged += new System.EventHandler(this.TextBoxSearch_TextChanged);
             // 
             // btnadd
             // 
@@ -85,7 +85,7 @@
             this.btnadd.TabIndex = 3;
             this.btnadd.Text = "Add";
             this.btnadd.UseVisualStyleBackColor = false;
-            this.btnadd.Click += new System.EventHandler(this.btnadd_Click);
+            this.btnadd.Click += new System.EventHandler(this.BtnAdd_Click);
             // 
             // btnupdate
             // 
@@ -96,7 +96,7 @@
             this.btnupdate.TabIndex = 4;
             this.btnupdate.Text = "Update";
             this.btnupdate.UseVisualStyleBackColor = false;
-            this.btnupdate.Click += new System.EventHandler(this.btnupdate_Click);
+            this.btnupdate.Click += new System.EventHandler(this.BtnUpdate_Click);
             // 
             // btndelete
             // 
@@ -108,7 +108,7 @@
             this.btndelete.TabIndex = 5;
             this.btndelete.Text = "Delete";
             this.btndelete.UseVisualStyleBackColor = false;
-            this.btndelete.Click += new System.EventHandler(this.btndelete_Click);
+            this.btndelete.Click += new System.EventHandler(this.BtnDelete_Click);
             // 
             // button1Refresh
             // 
@@ -120,7 +120,7 @@
             this.button1Refresh.TabIndex = 6;
             this.button1Refresh.Text = "Refresh";
             this.button1Refresh.UseVisualStyleBackColor = false;
-            this.button1Refresh.Click += new System.EventHandler(this.button1Refresh_Click);
+            this.button1Refresh.Click += new System.EventHandler(this.Button1Refresh_Click);
             // 
             // DataViewForm
             // 

@@ -18,10 +18,6 @@ namespace utility
     {
         private List<Employee> _employees;
         private List<Employee> _filteredEmployees;
-        private string _getEmployeesURl;
-        private string _addEmployeeURL;
-        private string _updateEmployeeURL;
-        private string _deleteEmployeeURl;
 
         public DataViewForm()
         {
@@ -30,16 +26,14 @@ namespace utility
 
         private async void Form2_Load(object sender, EventArgs e)
         {
-            _getEmployeesURl = ConfigurationManager.AppSettings["GetAllEmp"];
-            _addEmployeeURL = ConfigurationManager.AppSettings["AddEmp"];
-            _updateEmployeeURL = ConfigurationManager.AppSettings["UpdateEmp"];
-            _deleteEmployeeURl = ConfigurationManager.AppSettings["DeleteEmp"];
             LoadEmployees();
         }
 
         private async Task LoadEmployees()
         {
-            string jsonResponse = await Processor.MakeHttpCall(HttpMethod.Get, _getEmployeesURl, null);
+            string getEmployeesURl = ConfigurationManager.AppSettings["GetAllEmp"];
+
+            string jsonResponse = await Processor.MakeHttpCall(HttpMethod.Get, getEmployeesURl, null);
             _employees = JsonConvert.DeserializeObject<List<Employee>>(jsonResponse);
             if (_employees.Count == 0)
             {
@@ -68,23 +62,23 @@ namespace utility
             dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
         }
 
-        private void textBoxSearch_TextChanged(object sender, EventArgs e)
+        private void TextBoxSearch_TextChanged(object sender, EventArgs e)
         {
             string searchText = textBoxSearch.Text.Trim();
 
+            bool isIdMatch = int.TryParse(searchText, out int searchId);
+            
             _filteredEmployees = _employees.Where(emp =>
             {
-                bool isIdMatch = int.TryParse(searchText, out int searchId);
-                bool isFirstNameMatch = emp.FirstName.ToLower().Contains(searchText.ToLower());
-                bool isLastNameMatch = emp.LastName.ToLower().Contains(searchText.ToLower());
-
-                return isIdMatch && emp.ID == searchId || isFirstNameMatch || isLastNameMatch;
+                return isIdMatch && emp.ID == searchId || 
+                       emp.FirstName.ToLower().Contains(searchText.ToLower()) || 
+                       emp.LastName.ToLower().Contains(searchText.ToLower());
             }).ToList();
 
             dataGridView1.DataSource = _filteredEmployees;
         }
 
-        private void btnadd_Click(object sender, EventArgs e)
+        private void BtnAdd_Click(object sender, EventArgs e)
         {
             
             DetailsForm detailsForm = new DetailsForm();
@@ -92,14 +86,14 @@ namespace utility
             LoadEmployees();
         }
 
-        private void btnupdate_Click(object sender, EventArgs e)
+        private void BtnUpdate_Click(object sender, EventArgs e)
         {
             string input = ShowInputBox("Enter ID:");
             if (!string.IsNullOrEmpty(input))
             {
                 if (int.TryParse(input, out int id))
                 {
-                    DialogResult dialogResult = MessageBox.Show($"You entered ID: {id}. Do you want to edit?", "Information", MessageBoxButtons.OK, MessageBoxIcon.Question);
+                    DialogResult dialogResult = MessageBox.Show($"You entered ID: {id}. Do you want to edit?", "Information", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Error);
                     if (dialogResult == DialogResult.Yes)
                     {
                         DetailsForm detailsForm = new DetailsForm(id);
@@ -108,7 +102,7 @@ namespace utility
                 }
                 else
                 {
-                    MessageBox.Show("Invalid ID. Please enter a valid numeric ID.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Invalid ID. Please enter a valid numeric ID.", "Error", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Error);
                 }
             }
             LoadEmployees();
@@ -142,12 +136,12 @@ namespace utility
             return promptForm.ShowDialog() == DialogResult.OK ? txtInput.Text : null;
         }
 
-        private void button1Refresh_Click(object sender, EventArgs e)
+        private void Button1Refresh_Click(object sender, EventArgs e)
         {
             LoadEmployees();
         }
 
-        private async void btndelete_Click(object sender, EventArgs e)
+        private async void BtnDelete_Click(object sender, EventArgs e)
         {
             string input = ShowInputBox("Enter ID:");
             if (!string.IsNullOrEmpty(input))
@@ -157,7 +151,9 @@ namespace utility
                     DialogResult dialogResult = MessageBox.Show($"You entered ID: {id}. Do you want to delete?", "Information", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
                     if (dialogResult == DialogResult.Yes)
                     {
-                        string jsonResponse = await Processor.MakeHttpCall(HttpMethod.Delete, _deleteEmployeeURl+id.ToString(), null);
+                        string deleteEmployeeURl = ConfigurationManager.AppSettings["DeleteEmp"];
+
+                        string jsonResponse = await Processor.MakeHttpCall(HttpMethod.Delete, deleteEmployeeURl+id.ToString(), null);
 
                         if (!string.IsNullOrEmpty(jsonResponse))
                         {
