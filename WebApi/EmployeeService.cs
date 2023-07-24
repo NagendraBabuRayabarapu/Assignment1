@@ -11,30 +11,31 @@ namespace WebApi
             _employeeDAL = new EmployeeDAL(connectionString);
         }
 
-        public List<Employee> GetAllEmployees()
+        public async Task<List<Employee>> GetAllEmployeesAsync()
         {
-            return _employeeDAL.GetAllEmployees();
+            return await _employeeDAL.GetAllEmployeesAsync();
         }
 
-        public List<Employee> GetEmployeeById(int id)
+        public async Task<List<Employee>> GetEmployeeByIdAsync(int id)
         {
-            return _employeeDAL.GetEmployeeById(id);
+            return await _employeeDAL.GetEmployeeByIdAsync(id);
         }
 
-        public void AddEmployee(Employee employee)
+        public async Task AddEmployeeAsync(Employee employee)
         {
-            _employeeDAL.AddEmployee(employee);
+            await _employeeDAL.AddEmployeeAsync(employee);
         }
 
-        public bool UpdateEmployee(int id, Employee updatedEmployee)
+        public async Task<bool> UpdateEmployeeAsync(int id, Employee updatedEmployee)
         {
-            int rowsAffected = _employeeDAL.UpdateEmployee(id, updatedEmployee);
+            int rowsAffected = await _employeeDAL.UpdateEmployeeAsync(id, updatedEmployee);
             return rowsAffected > 0;
         }
 
-        public bool DeleteEmployee(int id)
+
+        public async Task<bool> DeleteEmployeeAsync(int id)
         {
-            int rowsAffected = _employeeDAL.DeleteEmployee(id);
+            int rowsAffected = await _employeeDAL.DeleteEmployeeAsync(id);
             return rowsAffected > 0;
         }
     }

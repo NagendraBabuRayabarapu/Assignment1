@@ -1,15 +1,9 @@
-﻿using Microsoft.AspNetCore.Hosting.Server;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
-using System.Data;
-using System.Diagnostics.Metrics;
-using System.Reflection;
-using System.Text;
+﻿using Microsoft.AspNetCore.Mvc;
 using WebApi.Models;
 
 namespace WebApi.Controllers
 {
+
     [Route("api/[controller]")]
     [ApiController]
     public class EmployeesController : ControllerBase
@@ -26,9 +20,9 @@ namespace WebApi.Controllers
         }
 
         [HttpGet]
-        public IActionResult Gets()
+        public async Task<IActionResult> Gets()
         {
-            List<Employee> employees = _employeeService.GetAllEmployees();
+            List<Employee> employees = await _employeeService.GetAllEmployeesAsync();
 
             if (employees.Count == 0)
             {
@@ -39,9 +33,9 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("GetEmployee")]
-        public IActionResult GetEmployee(int id)
+        public async Task<IActionResult> GetEmployee(int id)
         {
-            List<Employee> employee = _employeeService.GetEmployeeById(id);
+            List<Employee> employee = await _employeeService.GetEmployeeByIdAsync(id);
 
             if (employee == null)
             {
@@ -52,16 +46,16 @@ namespace WebApi.Controllers
         }
 
         [HttpPost("Add")]
-        public IActionResult AddEmployee([FromBody] Employee employee)
+        public async Task<IActionResult> AddEmployee([FromBody] Employee employee)
         {
-            _employeeService.AddEmployee(employee);
+            await _employeeService.AddEmployeeAsync(employee);
             return Ok("SUCCESS");
         }
 
         [HttpPut("Update")]
-        public IActionResult UpdateEmployee(int id, [FromBody] Employee updatedEmployee)
+        public async Task<IActionResult> UpdateEmployee(int id, [FromBody] Employee updatedEmployee)
         {
-            bool success = _employeeService.UpdateEmployee(id, updatedEmployee);
+            bool success = await _employeeService.UpdateEmployeeAsync(id, updatedEmployee);
 
             if (!success)
             {
@@ -72,9 +66,9 @@ namespace WebApi.Controllers
         }
 
         [HttpDelete("Delete")]
-        public IActionResult DeleteEmployee(int id)
+        public async Task<IActionResult> DeleteEmployee(int id)
         {
-            bool success = _employeeService.DeleteEmployee(id);
+            bool success = await _employeeService.DeleteEmployeeAsync(id);
 
             if (!success)
             {
@@ -84,4 +78,5 @@ namespace WebApi.Controllers
             return Ok($"SUCCESS 1 row deleted");
         }
     }
+
 }

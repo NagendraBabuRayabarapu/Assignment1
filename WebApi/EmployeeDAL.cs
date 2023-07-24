@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Threading.Tasks;
 using WebApi.Models;
 
 namespace WebApi
@@ -15,20 +16,20 @@ namespace WebApi
             _connectionString = connectionString;
         }
 
-        public List<Employee> GetAllEmployees()
+        public async Task<List<Employee>> GetAllEmployeesAsync()
         {
             string query = "SELECT * FROM Employees";
-            return ExecuteQuery<Employee>(query, CommandType.Text, null, MapEmployee);
+            return await ExecuteQueryAsync<Employee>(query, CommandType.Text, null, MapEmployee);
         }
 
-        public List<Employee> GetEmployeeById(int id)
+        public async Task<List<Employee>> GetEmployeeByIdAsync(int id)
         {
             string query = "SELECT * FROM Employees WHERE ID = @ID";
             var parameters = new List<SqlParameter> { new SqlParameter("@ID", id) };
-            return ExecuteQuery<Employee>(query, CommandType.Text, parameters, MapEmployee);
+            return await ExecuteQueryAsync<Employee>(query, CommandType.Text, parameters, MapEmployee);
         }
 
-        public void AddEmployee(Employee employee)
+        public async Task AddEmployeeAsync(Employee employee)
         {
             string spName = "sp_CreateEmp";
             var parameters = new List<SqlParameter>
@@ -39,10 +40,10 @@ namespace WebApi
                 new SqlParameter("@Salary", employee.Salary)
             };
 
-            ExecuteNonQuery(spName, CommandType.StoredProcedure, parameters);
+            await ExecuteNonQueryAsync(spName, CommandType.StoredProcedure, parameters);
         }
 
-        public int UpdateEmployee(int id, Employee updatedEmployee)
+        public async Task<int> UpdateEmployeeAsync(int id, Employee updatedEmployee)
         {
             string spName = "sp_UpdateEmp";
             var parameters = new List<SqlParameter>
@@ -54,17 +55,17 @@ namespace WebApi
                 new SqlParameter("@Salary", updatedEmployee.Salary)
             };
 
-            return ExecuteNonQuery(spName, CommandType.StoredProcedure, parameters);
+            return await ExecuteNonQueryAsync(spName, CommandType.StoredProcedure, parameters);
         }
 
-        public int DeleteEmployee(int id)
+        public async Task<int> DeleteEmployeeAsync(int id)
         {
             string query = "DELETE FROM Employees WHERE ID = @ID";
             var parameters = new List<SqlParameter> { new SqlParameter("@ID", id) };
-            return ExecuteNonQuery(query, CommandType.Text, parameters);
+            return await ExecuteNonQueryAsync(query, CommandType.Text, parameters);
         }
 
-        private List<T> ExecuteQuery<T>(string query, CommandType commandType, List<SqlParameter> parameters, Func<SqlDataReader, T> mapper)
+        private async Task<List<T>> ExecuteQueryAsync<T>(string query, CommandType commandType, List<SqlParameter> parameters, Func<SqlDataReader, T> mapper)
         {
             List<T> result = new List<T>();
 
@@ -78,11 +79,11 @@ namespace WebApi
                     command.Parameters.AddRange(parameters.ToArray());
                 }
 
-                connection.Open();
+                await connection.OpenAsync();
 
-                using (SqlDataReader reader = command.ExecuteReader())
+                using (SqlDataReader reader = await command.ExecuteReaderAsync())
                 {
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         T item = mapper(reader);
                         result.Add(item);
@@ -93,7 +94,7 @@ namespace WebApi
             return result;
         }
 
-        private int ExecuteNonQuery(string query, CommandType commandType, List<SqlParameter> parameters)
+        private async Task<int> ExecuteNonQueryAsync(string query, CommandType commandType, List<SqlParameter> parameters)
         {
             int rowsAffected = 0;
 
@@ -107,8 +108,8 @@ namespace WebApi
                     command.Parameters.AddRange(parameters.ToArray());
                 }
 
-                connection.Open();
-                rowsAffected = command.ExecuteNonQuery();
+                await connection.OpenAsync();
+                rowsAffected = await command.ExecuteNonQueryAsync();
             }
 
             return rowsAffected;
